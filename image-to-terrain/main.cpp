@@ -42,12 +42,14 @@ const char *fragmentSource =
 "}\n";
 
 int main() {
+	// GLFW init
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+	// Window and context creation
 	GLFWwindow *window = glfwCreateWindow(WIDTH, HEIGHT, "Window", nullptr, nullptr);
 	if(window == nullptr) {
 		std::cout << "Failed to create GLFW window" << std::endl;
@@ -56,6 +58,7 @@ int main() {
 	}
 	glfwMakeContextCurrent(window);
 
+	// GLAD init
 	if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::cout << "Failed to initialize GLAD" << std::endl;
 		return -1;
@@ -68,14 +71,13 @@ int main() {
 	glShaderSource(vertex, 1, &vertexSource, 0);
 	glCompileShader(vertex);
 
-	// Check compilation status
 	int compiled;
-	glGetShaderiv(vertex, GL_COMPILE_STATUS, &compiled);
+	glGetShaderiv(vertex, GL_COMPILE_STATUS, &compiled);	// Check compilation status
 	if(compiled != GL_TRUE)
 	{
 		int log_length = 0;
-		char message[1024];
-		glGetShaderInfoLog(vertex, 1024, &log_length, message);
+		char message[512];
+		glGetShaderInfoLog(vertex, 512, &log_length, message);
 		std::cout << "Failed to compile vertex shader!\n" << message << std::endl;
 	}
 
@@ -83,12 +85,12 @@ int main() {
 	glShaderSource(fragment, 1, &fragmentSource, 0);
 	glCompileShader(fragment);
 
-	glGetShaderiv(vertex, GL_COMPILE_STATUS, &compiled);
+	glGetShaderiv(vertex, GL_COMPILE_STATUS, &compiled);	// Check compilation status
 	if(compiled != GL_TRUE)
 	{
 		int log_length = 0;
-		char message[1024];
-		glGetShaderInfoLog(vertex, 1024, &log_length, message);
+		char message[512];
+		glGetShaderInfoLog(vertex, 512, &log_length, message);
 		std::cout << "Failed to compile vertex shader!\n" << message << std::endl;
 	}
 
@@ -107,7 +109,7 @@ int main() {
 	// Texture creation
 	int width, height, channels;
 	stbi_set_flip_vertically_on_load(true);
-	unsigned char *data = stbi_load("C:/dev/Projects/perlin/perlin/res/images/noise.png", &width, &height, &channels, 4);
+	unsigned char *data = stbi_load("C:/dev/GitHub/image-to-terrain/image-to-terrain/res/images/noise.png", &width, &height, &channels, 4);
 	if(data == nullptr)
 	{
 		std::cout << "Failed to load image!" << std::endl;
@@ -121,23 +123,27 @@ int main() {
 	
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+	stbi_image_free(data);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	std::vector<float> vPos;
+	vPos.reserve(width * height * 12);
+
 	std::vector<unsigned int> indices;
+	indices.reserve(width * height * 6);
+
 	std::vector<float> texPos;
+	texPos.reserve(width * height * 8);
 
 	unsigned int index = 0;
-	int n = 256;
-	float step = (float)width / n;
-	for(int i = 0; i < n; i++)
-	for(int j = 0; j < n; j++)
+
+	for(int i = 0; i < width; i++)
+	for(int j = 0; j < height; j++)
 	{
 		std::vector<float> currentVPos
 		{
@@ -158,23 +164,16 @@ int main() {
 		indices.insert(indices.end(), currentIndices.begin(), currentIndices.end());
 		index += 4;
 
+		// TODO: possible wrong order of width and height
 		std::vector<float> currentTexCoordinates
 		{
-			step * i, step * j,
-			step * (i+1), step * j,
-			step * (i+1), step * (j+1),
-			step * i, step * (j+1)
+			(float)i / width, (float)j / height,
+			(float)(i+1) / width, (float)j / height,
+			(float)(i+1) / width, (float)(j+1) / height,
+			(float)i / width, (float)(j+1) / height
 		};
 
-		std::vector<float> normalized;
-		normalized.reserve(currentTexCoordinates.size());
-
-		for(int it = 0; it < currentTexCoordinates.size(); it++)
-		{
-			normalized.push_back(currentTexCoordinates[it] / width);
-		}
-
-		texPos.insert(texPos.end(), normalized.begin(), normalized.end());
+		texPos.insert(texPos.end(), currentTexCoordinates.begin(), currentTexCoordinates.end());
 	}
 
 	// VAO creation
@@ -218,20 +217,20 @@ int main() {
 	int projectionLoc = glGetUniformLocation(program, "projection");
 	int viewLoc = glGetUniformLocation(program, "view");
 
+	int vertexCount = (int)indices.size();
+
+	glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 1500.0f);
+	glUniformMatrix4fv(projectionLoc, 1, false, glm::value_ptr(projection));
+	
 	while(!glfwWindowShouldClose(window)) {
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glm::mat4 model(1.0f);
+		model = glm::translate(model, { -(float)width / 2.0f, -(float)width / 6.0f, -(float)width * 1.7f });
 		glUniformMatrix4fv(modelLoc, 1, false, glm::value_ptr(model));
 
-		glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 1500.0f);
-		glUniformMatrix4fv(projectionLoc, 1, false, glm::value_ptr(projection));
-
 		glm::mat4 view(1.0f);
-		view = glm::translate(view, { (float)-n / 2.0f, -(float)n / 8.0f, -(float)n});
-		view = glm::rotate(view, glm::radians(25.0f), { 1.0f, 0.0f, 0.0f });
-		view = glm::rotate(view, glm::radians(90.0f), { 0.0f, 1.0f, 0.0f });
 		glUniformMatrix4fv(viewLoc, 1, false, glm::value_ptr(view));
 
 		glActiveTexture(GL_TEXTURE0);
@@ -240,7 +239,7 @@ int main() {
 		glBindVertexArray(VAO);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 
-		glDrawElements(GL_TRIANGLES, (int)indices.size(), GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT, 0);
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
@@ -252,7 +251,6 @@ int main() {
 		glfwPollEvents();
 	}
 
-	stbi_image_free(data);
 	glfwTerminate();
 	return 0;
 }
