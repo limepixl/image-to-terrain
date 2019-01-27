@@ -125,9 +125,19 @@
   <ItemGroup>
     <ClCompile Include="glad\glad.c" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="RM\ResourceManagement.cpp" />
+    <ClCompile Include="Shader\Shader.cpp" />
+    <ClCompile Include="Texture\Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="stb_image.h" />
+    <ClInclude Include="RM\ResourceManagement.hpp" />
+    <ClInclude Include="RM\stb_image.h" />
+    <ClInclude Include="Shader\Shader.hpp" />
+    <ClInclude Include="Texture\Texture.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\shaders\basicF.glsl" />
+    <None Include="res\shaders\basicV.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
