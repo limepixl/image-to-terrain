@@ -62,5 +62,5 @@
 #*.rtf   diff=astextplain
 #*.RTF   diff=astextplain
 
-image-to-terrain/stb_image.h linguist-vendored
+image-to-terrain/RM/stb_image.h linguist-vendored
 image-to-terrain/glad/glad.c linguist-vendored
