@@ -31,10 +31,6 @@ int main() {
 	}
 	glfwMakeContextCurrent(window);
 
-	// Delta time calcs
-	double deltaTime = 0.0;
-	double lastFrame = 0.0;
-
 	// GLAD init
 	if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::cout << "Failed to initialize GLAD" << std::endl;
@@ -144,17 +140,6 @@ int main() {
 	int vertexCount = (int)indices.size();
 
 	while(!glfwWindowShouldClose(window)) {
-		// Calculating delta time
-		double currentTime = glfwGetTime();
-		deltaTime = currentTime - lastFrame;
-		lastFrame = currentTime;
-
-		char title[10];
-		title[9] = '\0'; 
-		snprintf(title, 9, "%f", 1.0f / deltaTime);
-
-		glfwSetWindowTitle(window, title);
-
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		processInput(window, scale);
