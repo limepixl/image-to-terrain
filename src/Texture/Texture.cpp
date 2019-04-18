@@ -1,7 +1,7 @@
 #include "Texture.hpp"
-#include <glad/glad.h>
+#include <GL/glew.h>
 
-Texture::Texture(unsigned char* data, int index, int width, int height, int channels)
+Texture::Texture(unsigned char* data, int index, int width, int height)
 	: index(index), width(width), height(height)
 {
 	glGenTextures(1, &texture);

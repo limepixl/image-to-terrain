@@ -9,7 +9,7 @@ struct Texture
 	int width;
 	int height;
 
-	Texture(unsigned char* data, int index, int width, int height, int channels);
+    Texture(unsigned char* data, int index, int width, int height);
 
 	void bind();
 	void unbind();

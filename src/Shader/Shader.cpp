@@ -1,5 +1,5 @@
 #include "Shader.hpp"
-#include <glad/glad.h>
+#include <GL/glew.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 
@@ -10,7 +10,7 @@ Shader::Shader(std::string vertexSource, std::string fragmentSource)
 
 	// Shaders
 	unsigned int vertex = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertex, 1, &vSourceC, 0);
+    glShaderSource(vertex, 1, &vSourceC, nullptr);
 	glCompileShader(vertex);
 
 	int compiled;
@@ -24,7 +24,7 @@ Shader::Shader(std::string vertexSource, std::string fragmentSource)
 	}
 
 	unsigned int fragment = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragment, 1, &fSourceC, 0);
+    glShaderSource(fragment, 1, &fSourceC, nullptr);
 	glCompileShader(fragment);
 
 	glGetShaderiv(vertex, GL_COMPILE_STATUS, &compiled);	// Check compilation status
